@@ -1,7 +1,6 @@
 
-from hoshino.config.__bot__ import SUPERUSERS
+from hoshino import Service, priv
 from datetime import timedelta, datetime
-from math import ceil
 
 import random, string
 import os
@@ -121,14 +120,6 @@ async def change_authed_time(gid, time_change=0, operate=''):
         await flush_group()
     return group_dict[gid]
 
-async def get_nickname(user_id):
-    '''
-    获取用户昵称
-    '''
-    uid = user_id
-    user_info = await nonebot.get_bot().get_stranger_info(user_id=uid)
-    return user_info['nickname']
-
 
 async def get_group_info(group_ids=0, info_type='group_name'):
     '''
@@ -213,6 +204,20 @@ async def process_group_msg(gid, expiration, title: str = '', end='', group_name
     msg += f'群号：{gid}\n群名：{group_name}\n到期时间：{time_format}'
     msg += end
     return msg
+    
+async def get_group_name(sid, gid, group_name_sp=''):
+    if group_name_sp == '':
+        bot = nonebot.get_bot()
+        self_ids = bot._wsr_api_clients.keys()
+        for sid in self_ids:
+            try:
+                group_info = await bot.get_group_info(self_id=sid, group_id=gid)
+                group_name = group_info['group_name']
+            except:
+                group_name = '未知(Bot未加入此群)'
+    else:
+        group_name = group_name_sp
+    return group_name
 
 
 async def new_group_check(gid):
@@ -260,7 +265,7 @@ async def gun_group(group_id, reason='管理员操作'):
         await nonebot.get_bot().send_group_msg(group_id=gid, message=msg)
     except Exception as e:
         hoshino.logger.error(f'向群{group_id}发送退群消息时发生错误{e}')
-    await asyncio.sleep(2)
+    await asyncio.sleep(20)
     try:
         await nonebot.get_bot().set_group_leave(group_id=gid)
     except nonebot.CQHttpError:
@@ -279,16 +284,6 @@ async def notify_group(group_id, txt):
         return False
     return True
 
-async def notify_master(txt):
-    '''
-    通知主人
-    '''
-    try:
-        await nonebot.get_bot().send_private_msg(user_id=SUPERUSERS[0], message=txt)
-    except nonebot.CQHttpError:
-        return False
-    return True
-    
 
 def time_now():
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
