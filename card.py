@@ -77,7 +77,7 @@ async def key_list_chat(session):
 
 
 @on_command('充值', only_to_me=False)
-async def reg_group_chat(session: CommandSession):
+async def reg_group_chat(session):
 
     key = session.get('key', prompt="请输入卡密（直接发送）")
     if len(key) != 16:
@@ -100,8 +100,7 @@ async def reg_group_chat(session: CommandSession):
     if session.event.detail_type == 'private':
         sid = session.event.self_id
         group_name = await util.get_group_name(sid, gid)
-        msg = f"""[CQ:image,file={get_group_acatar_url(int(gid))}]\n
-群号:{gid}
+        msg = f"""群号:{gid}
 群名:{group_name}
 ※请确认以上信息后，回复“确认”来完成本次操作。
 ※回复其他内容会终止。
@@ -116,10 +115,8 @@ async def reg_group_chat(session: CommandSession):
         # 充值失败
         msg = '卡密无效, 请检查是否有误或已被使用, 如果无此类问题请联系发卡方'
     else:
-        nickname = await util.get_nickname(user_id=session.event.user_id)
-        log_info = f'{nickname}({session.event.user_id})使用了卡密{key}\n为群{gid}成功充值{days}天'
+        log_info = f'({session.event.user_id})使用了卡密{key}\n为群{gid}成功充值{days}天'
         util.log(log_info, 'card_use')
-        await util.notify_master(log_info)
         msg = await util.process_group_msg(gid, result, '充值成功\n', end)
     session.finish(msg)
 
